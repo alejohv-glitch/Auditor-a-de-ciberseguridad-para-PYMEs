@@ -1,0 +1,25 @@
+services:
+  app:
+    build: .
+    env_file: .env
+    volumes: [ "appdata:/data" ]
+    restart: unless-stopped
+  cron:
+    build: .
+    env_file: .env
+    volumes: [ "appdata:/data" ]
+    restart: unless-stopped
+    # hourly monitoring, daily retention purge
+    command: >
+      sh -c "while true; do
+        python -m app.cli monitor;
+        if [ $$(date +%H) = 03 ]; then python -m app.cli purge; fi;
+        sleep 3600; done"
+  caddy:
+    image: caddy:2
+    ports: [ "80:80", "443:443" ]
+    volumes: [ "./deploy/Caddyfile:/etc/caddy/Caddyfile:ro", "caddydata:/data" ]
+    restart: unless-stopped
+volumes:
+  appdata: {}
+  caddydata: {}

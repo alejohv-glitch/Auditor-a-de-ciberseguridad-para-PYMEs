@@ -1,0 +1,535 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Security report · clinica-demo.example</title>
+<style>:root {
+  --bg: #f7f8fa; --surface: #ffffff; --text: #18202b; --muted: #5b6676; --border: #e2e6ec;
+  --brand: #1f5eff; --brand-ink: #ffffff;
+  --crit: #a3112e; --high: #d1431b; --med: #b77900; --low: #3a6ea5; --info: #6b7480; --ok: #1d7a46;
+  --radius: 10px; --max: 1080px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f141b; --surface: #171e27; --text: #e6ebf2; --muted: #9aa6b5; --border: #2a3441;
+    --brand: #6b95ff; --crit: #ff5d7a; --high: #ff7a4d; --med: #f0b43c; --low: #7fb0e8; --info: #9aa6b5; --ok: #4cc485;
+  }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--text);
+  font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+a { color: var(--brand); }
+h1, h2, h3 { line-height: 1.2; margin: 0 0 .5em; }
+h1 { font-size: clamp(1.7rem, 4vw, 2.6rem); letter-spacing: -.02em; }
+h2 { font-size: 1.45rem; margin-top: 1.2em; }
+h3 { font-size: 1.08rem; }
+p { margin: 0 0 1em; }
+.wrap { max-width: var(--max); margin: 0 auto; padding: 0 16px; }
+.muted { color: var(--muted); }
+.small { font-size: .875rem; }
+.center { text-align: center; }
+
+/* nav */
+.nav { background: var(--surface); border-bottom: 1px solid var(--border); }
+.nav .wrap { display: flex; align-items: center; gap: 16px; min-height: 60px; flex-wrap: wrap; }
+.logo { font-weight: 800; font-size: 1.15rem; color: var(--text); text-decoration: none; letter-spacing: -.01em; }
+.logo span { color: var(--brand); }
+.nav .links { margin-left: auto; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+.nav .links a { color: var(--muted); text-decoration: none; font-size: .95rem; }
+.nav .links a:hover { color: var(--text); }
+.nav .links a.btn { color: var(--brand-ink); }
+td meter { min-width: 120px; }
+.nav form { margin: 0; }
+
+/* buttons & forms */
+.btn { display: inline-block; border: 1px solid var(--brand); background: var(--brand); color: var(--brand-ink);
+  padding: .62em 1.1em; border-radius: 8px; font-weight: 600; text-decoration: none; cursor: pointer; font-size: 1rem; }
+.btn:hover { filter: brightness(1.08); }
+.btn.secondary { background: transparent; color: var(--brand); }
+.btn.danger { background: transparent; color: var(--crit); border-color: var(--crit); }
+.btn.small { padding: .35em .7em; font-size: .875rem; }
+.linkbtn { background: none; border: 0; color: var(--muted); cursor: pointer; font: inherit; padding: 0; }
+input[type=text], input[type=email], input[type=password], input[type=number], select, textarea {
+  width: 100%; padding: .65em .75em; border: 1px solid var(--border); border-radius: 8px; background: var(--surface);
+  color: var(--text); font: inherit; }
+label { display: block; font-weight: 600; margin: .8em 0 .3em; }
+label.check { font-weight: 400; display: flex; gap: .55em; align-items: flex-start; }
+label.check input { margin-top: .3em; }
+.form-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+.form-row > * { flex: 1 1 220px; }
+.form-row > .btn { flex: 0 0 auto; }
+.alert { padding: .8em 1em; border-radius: 8px; margin: 1em 0; border: 1px solid; }
+.alert.error { color: var(--crit); border-color: var(--crit); }
+.alert.ok { color: var(--ok); border-color: var(--ok); }
+.alert.demo { color: var(--med); border-color: var(--med); font-weight: 700; }
+
+/* cards & grids */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin: 16px 0; }
+.grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.grid.k { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); }
+.stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; }
+.stat .n { font-size: 1.9rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.stat .l { color: var(--muted); font-size: .85rem; text-transform: uppercase; letter-spacing: .04em; }
+.n.critical { color: var(--crit); } .n.high { color: var(--high); } .n.medium { color: var(--med); }
+.n.low { color: var(--low); } .n.ok { color: var(--ok); }
+
+/* score */
+.score { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.score .big { font-size: 3.4rem; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+.score .big small { font-size: 1.1rem; color: var(--muted); font-weight: 600; }
+.grade { display: inline-grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; font-weight: 800;
+  font-size: 1.5rem; color: #fff; background: var(--info); }
+.grade.A { background: var(--ok); } .grade.B { background: #4a9d3f; } .grade.C { background: var(--med); }
+.grade.D { background: var(--high); } .grade.F { background: var(--crit); }
+meter { width: 100%; height: 12px; }
+.delta.up { color: var(--ok); font-weight: 700; } .delta.down { color: var(--crit); font-weight: 700; }
+
+/* severity badges */
+.sev { display: inline-block; padding: .12em .55em; border-radius: 999px; font-size: .78rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .03em; color: #fff; background: var(--info); white-space: nowrap; }
+.sev.critical { background: var(--crit); } .sev.high { background: var(--high); } .sev.medium { background: var(--med); }
+.sev.low { background: var(--low); } .sev.pass { background: var(--ok); } .sev.unknown { background: var(--info); }
+.tag { display: inline-block; padding: .1em .5em; border: 1px solid var(--border); border-radius: 6px; font-size: .78rem; color: var(--muted); }
+
+/* findings */
+.finding { border: 1px solid var(--border); border-left: 5px solid var(--info); border-radius: 8px; padding: 14px 16px;
+  margin: 12px 0; background: var(--surface); break-inside: avoid; }
+.finding.critical { border-left-color: var(--crit); } .finding.high { border-left-color: var(--high); }
+.finding.medium { border-left-color: var(--med); } .finding.low { border-left-color: var(--low); }
+.finding h3 { margin: .35em 0 .4em; }
+.finding dl { margin: 0; display: grid; grid-template-columns: minmax(110px, 160px) 1fr; gap: 6px 14px; }
+.finding dt { color: var(--muted); font-size: .9rem; }
+.finding dd { margin: 0; }
+pre, code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .85rem; }
+pre { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 8px; overflow-x: auto;
+  white-space: pre-wrap; word-break: break-word; margin: 0; }
+.passlist { columns: 2 260px; padding-left: 1.1em; }
+.passlist li { margin: .2em 0; break-inside: avoid; }
+.passlist li::marker { content: "✓  "; color: var(--ok); }
+
+/* tables */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+th { color: var(--muted); font-size: .82rem; text-transform: uppercase; letter-spacing: .04em; font-weight: 600; }
+
+/* landing */
+.hero { padding: 56px 0 28px; }
+.hero p.lead { font-size: 1.2rem; color: var(--muted); max-width: 720px; }
+.hero .checkbox-card { max-width: 720px; }
+.section { padding: 28px 0; }
+.steps { counter-reset: s; list-style: none; padding: 0; }
+.steps li { counter-increment: s; padding-left: 2.4em; position: relative; margin: .8em 0; }
+.steps li::before { content: counter(s); position: absolute; left: 0; top: 0; width: 1.7em; height: 1.7em; border-radius: 50%;
+  background: var(--brand); color: #fff; display: grid; place-items: center; font-weight: 700; font-size: .9rem; }
+.price { font-size: 2rem; font-weight: 800; }
+.price small { font-size: .95rem; color: var(--muted); font-weight: 500; }
+.plan ul { padding-left: 1.1em; }
+.plan.featured { border-color: var(--brand); border-width: 2px; }
+details { border-bottom: 1px solid var(--border); padding: 12px 0; }
+summary { cursor: pointer; font-weight: 600; }
+.footer { border-top: 1px solid var(--border); padding: 24px 0; margin-top: 40px; color: var(--muted); font-size: .9rem; }
+.chart { width: 100%; height: 160px; }
+.chart polyline { fill: none; stroke: var(--brand); stroke-width: 2.5; }
+.chart line { stroke: var(--border); }
+.chart text { fill: var(--muted); font-size: 11px; }
+.toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 12px 0; }
+.spinner { width: 42px; height: 42px; border: 4px solid var(--border); border-top-color: var(--brand); border-radius: 50%;
+  animation: spin 1s linear infinite; margin: 20px auto; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.locked { position: relative; border: 1px dashed var(--border); border-radius: 8px; padding: 16px; text-align: center; }
+
+/* report print */
+.report-cover { padding: 24px 0 8px; border-bottom: 3px solid var(--brand); margin-bottom: 16px; }
+@media print {
+  :root { --bg: #fff; --surface: #fff; --text: #000; --muted: #444; --border: #ccc; }
+  .noprint, .nav, .footer { display: none !important; }
+  body { font-size: 11pt; }
+  .card, .finding { break-inside: avoid; }
+  a { color: inherit; text-decoration: none; }
+  .report-cover { break-after: page; min-height: 80vh; }
+}
+@media (max-width: 560px) {
+  .finding dl { grid-template-columns: 1fr; }
+  .score .big { font-size: 2.6rem; }
+}
+</style>
+
+</head>
+<body>
+
+<main class="wrap">
+
+<div class="alert demo">DEMO — Fictitious data for demonstration purposes. Not a real company.</div>
+
+<section class="report-cover">
+  <p class="muted">Seclara · External security posture report</p>
+  <h1>clinica-demo.example</h1>
+  <p class="muted">Domain: <strong>clinica-demo.example</strong> · Date: 04/10/2026 15:43 UTC · Analysis version 2026.10.1</p>
+  <div class="card"><div class="score">
+  <div><div class="muted small">Security score</div><div class="big">49<small> / 100</small></div></div>
+  <div class="grade D">D</div>
+</div>
+<meter min="0" max="100" low="60" high="85" optimum="100" value="49">49/100</meter>
+    
+    <p></p><div class="grid k">
+  <div class="stat"><div class="n critical">0</div><div class="l">Crítico</div></div>
+  <div class="stat"><div class="n high">1</div><div class="l">Alto</div></div>
+  <div class="stat"><div class="n medium">4</div><div class="l">Medio</div></div>
+  <div class="stat"><div class="n low">10</div><div class="l">Bajo</div></div>
+  <div class="stat"><div class="n ok">11</div><div class="l">Correctos</div></div>
+</div>
+  </div>
+  
+  <div class="card"><h3>Changes since previous scan</h3>
+    <p>50 → 49
+      <span class="delta down">-1</span>
+      · Fixed: 2 · New: 3</p>
+  </div>
+</section>
+
+<section>
+  <h2>Executive summary</h2>
+  <div class="card"><p>We analysed 30 publicly observable security controls for clinica-demo.example.</p><p>Most important to fix: Certificate expires in 5 days.</p><p>Your domain is easier to impersonate by email than it needs to be (fake invoices, CEO fraud).</p><p>There are problems with your website&#39;s secure connection (HTTPS) that visitors may notice.</p><p>11 of the issues found can be fixed in minutes with a configuration change.</p></div>
+  
+  <h3>Score by area</h3>
+  <div class="table-wrap"><table>
+    <tr><th>Area</th><th>Points</th><th></th></tr>
+    
+    <tr><td>Email security</td><td>12.0 / 30.0</td><td><meter min="0" max="30.0" value="12.0"></meter></td></tr>
+    
+    <tr><td>HTTPS &amp; certificate</td><td>3.8 / 25.0</td><td><meter min="0" max="25.0" value="3.8"></meter></td></tr>
+    
+    <tr><td>Security headers</td><td>10.5 / 15.0</td><td><meter min="0" max="15.0" value="10.5"></meter></td></tr>
+    
+    <tr><td>Cookies</td><td>6.5 / 10.0</td><td><meter min="0" max="10.0" value="6.5"></meter></td></tr>
+    
+    <tr><td>DNS</td><td>8.0 / 10.0</td><td><meter min="0" max="10.0" value="8.0"></meter></td></tr>
+    
+    <tr><td>Information exposure</td><td>8.0 / 10.0</td><td><meter min="0" max="10.0" value="8.0"></meter></td></tr>
+    
+  </table></div>
+</section>
+
+<section>
+  <h2>Issues by priority (19)</h2>
+  
+  <article class="finding high">
+    <span class="sev high">High</span> <span class="tag">HTTPS &amp; certificate</span> <span class="tag">Misconfiguration</span>
+    <span class="tag">−12.5 pts</span>
+    <h3>1. Certificate expires in 5 days</h3>
+    <dl>
+      <dt>What we found</dt><dd>The certificate expires on 2026-10-09 (5 days left). Issuer: Let&#39;s Encrypt.</dd>
+      <dt>Why it matters</dt><dd>Once expired, browsers will block the site with a warning. Auto-renewal normally renews before 20 days remain; if not, something is broken.</dd>
+      <dt>Recommendation</dt><dd>Check that automatic renewal works, or renew manually now.</dd>
+      <dt>Effort</dt><dd>Low (minutes, config change)</dd>
+      <dt>Evidence</dt><dd><pre>days: 5
+not_after: 2026-10-09
+issuer: Let&#39;s Encrypt
+</pre></dd>
+    </dl>
+  </article>
+  
+  <article class="finding medium">
+    <span class="sev medium">Medium</span> <span class="tag">Email security</span> <span class="tag">Misconfiguration</span>
+    <span class="tag">−7.5 pts</span>
+    <h3>2. SPF policy does not protect (&#34;?all&#34;)</h3>
+    <dl>
+      <dt>What we found</dt><dd>The SPF record ends with &#34;?all&#34;: neutral, it states nothing</dd>
+      <dt>Why it matters</dt><dd>The SPF ending tells receivers what to do with mail from unauthorised servers. A permissive ending provides little protection against spoofing.</dd>
+      <dt>Recommendation</dt><dd>End the record with &#34;~all&#34; (good start) or &#34;-all&#34; once you are sure every legitimate sender is listed.</dd>
+      <dt>Effort</dt><dd>Low (minutes, config change)</dd>
+      <dt>Evidence</dt><dd><pre>qualifier: ?
+meaning: neutral, it states nothing
+record: v=spf1 include:spf.protection.outlook.com include:servers.mcsv.net ?all
+</pre></dd>
+    </dl>
+  </article>
+  
+  <article class="finding medium">
+    <span class="sev medium">Medium</span> <span class="tag">Email security</span> <span class="tag">Missing hardening</span>
+    <span class="tag">−7.5 pts</span>
+    <h3>3. DMARC in monitor-only mode (p=none)</h3>
+    <dl>
+      <dt>What we found</dt><dd>The DMARC policy is &#34;p=none&#34;.</dd>
+      <dt>Why it matters</dt><dd>With p=none, email spoofing your domain is still delivered; you only receive reports. A good first step, but it does not protect yet.</dd>
+      <dt>Recommendation</dt><dd>Once reports show your legitimate mail passes SPF/DKIM, move to &#34;p=quarantine&#34; and then &#34;p=reject&#34; (with pct=100).</dd>
+      <dt>Effort</dt><dd>Medium (needs testing)</dd>
+      <dt>Evidence</dt><dd><pre>policy: none
+pct_note: 
+record: v=DMARC1; p=none
+</pre></dd>
+    </dl>
+  </article>
+  
+  <article class="finding medium">
+    <span class="sev medium">Medium</span> <span class="tag">HTTPS &amp; certificate</span> <span class="tag">Misconfiguration</span>
+    <span class="tag">−6.2 pts</span>
+    <h3>4. Accepts obsolete protocols (TLSv1, TLSv1.1)</h3>
+    <dl>
+      <dt>What we found</dt><dd>The server accepted a connection using TLSv1, TLSv1.1.</dd>
+      <dt>Why it matters</dt><dd>TLS 1.0 and 1.1 are deprecated (RFC 8996) due to known weaknesses and are flagged in audits, customer questionnaires and PCI-DSS.</dd>
+      <dt>Recommendation</dt><dd>Disable TLS 1.0 and 1.1 on the server/CDN; keep TLS 1.2 and 1.3.</dd>
+      <dt>Effort</dt><dd>Medium (needs testing)</dd>
+      <dt>Evidence</dt><dd><pre>versions: TLSv1, TLSv1.1
+</pre></dd>
+    </dl>
+  </article>
+  
+  <article class="finding medium">
+    <span class="sev medium">Medium</span> <span class="tag">Cookies</span> <span class="tag">Misconfiguration</span>
+    <span class="tag">−2.5 pts</span>
+    <h3>5. Cookies without Secure flag</h3>
+    <dl>
+      <dt>What we found</dt><dd>Cookies without &#34;Secure&#34;: PHPSESSID.</dd>
+      <dt>Why it matters</dt><dd>A cookie without Secure may be sent unencrypted and captured on untrusted networks; for session cookies this can allow account takeover.</dd>
+      <dt>Recommendation</dt><dd>Set the &#34;Secure&#34; attribute on cookies (in PHP, session.cookie_secure=1 once HTTPS is enforced).</dd>
+      <dt>Effort</dt><dd>Low (minutes, config change)</dd>
+      <dt>Evidence</dt><dd><pre>names: PHPSESSID
+</pre></dd>
+    </dl>
+  </article>
+  
+  <article class="finding low">
+    <span class="sev low">Low</span> <span class="tag">Email security</span> <span class="tag">Recommendation</span>
+    <span class="tag">−3.0 pts</span>
+    <h3>6. DMARC without reporting address (rua)</h3>
+    <dl>
+      <dt>What we found</dt><dd>The DMARC record has no &#34;rua=&#34; tag.</dd>
+      <dt>Why it matters</dt><dd>Without reports you cannot see who sends email as your domain, and tightening the policy becomes guesswork.</dd>
+      <dt>Recommendation</dt><dd>Add &#34;rua=mailto:dmarc@clinica-demo.example&#34; (or the address of a DMARC reporting service).</dd>
+      <dt>Effort</dt><dd>Low (minutes, config change)</dd>
+      <dt>Evidence</dt><dd><pre>domain: clinica-demo.example
+</pre></dd>
+    </dl>
+  </article>
+  
+  <article class="finding low">
+    <span class="sev low">Low</span> <span class="tag">HTTPS &amp; certificate</span> <span class="tag">Missing hardening</span>
+    <span class="tag">−2.5 pts</span>
+    <h3>7. Missing HSTS (Strict-Transport-Security)</h3>
+    <dl>
+      <dt>What we found</dt><dd>Strict-Transport-Security header not sent.</dd>
+      <dt>Why it matters</dt><dd>HSTS tells browsers to always use HTTPS for your site, preventing a malicious Wi-Fi network from downgrading the connection.</dd>
+      <dt>Recommendation</dt><dd>Send &#34;Strict-Transport-Security: max-age=31536000&#34; (add includeSubDomains if every sub-domain uses HTTPS).</dd>
+      <dt>Effort</dt><dd>Low (minutes, config change)</dd>
+      <dt>Evidence</dt><dd><pre>detail: Strict-Transport-Security header not sent.
+</pre></dd>
+    </dl>
+  </article>
+  
+  <article class="finding low">
+    <span class="sev low">Low</span> <span class="tag">Security headers</span> <span class="tag">Missing hardening</span>
+    <span class="tag">−1.5 pts</span>
+    <h3>8. No Content-Security-Policy</h3>
+    <dl>
+      <dt>What we found</dt><dd>The response has no Content-Security-Policy header.</dd>
+      <dt>Why it matters</dt><dd>CSP restricts which scripts the site may run, limiting damage if code is ever injected (e.g. a compromised plugin). It is an extra layer, not a flaw by itself.</dd>
+      <dt>Recommendation</dt><dd>Start with &#34;Content-Security-Policy-Report-Only&#34; to see what would break and tighten gradually. Ask your developer: it needs testing.</dd>
+      <dt>Effort</dt><dd>High (needs planning)</dd>
+      
+    </dl>
+  </article>
+  
+  <article class="finding low">
+    <span class="sev low">Low</span> <span class="tag">Security headers</span> <span class="tag">Missing hardening</span>
+    <span class="tag">−1.5 pts</span>
+    <h3>9. Missing X-Content-Type-Options</h3>
+    <dl>
+      <dt>What we found</dt><dd>The response does not include &#34;X-Content-Type-Options: nosniff&#34;.</dd>
+      <dt>Why it matters</dt><dd>Stops browsers from interpreting files as a different type than declared, closing a known attack path.</dd>
+      <dt>Recommendation</dt><dd>Add &#34;X-Content-Type-Options: nosniff&#34; on the server or CDN.</dd>
+      <dt>Effort</dt><dd>Low (minutes, config change)</dd>
+      
+    </dl>
+  </article>
+  
+  <article class="finding low">
+    <span class="sev low">Low</span> <span class="tag">Security headers</span> <span class="tag">Missing hardening</span>
+    <span class="tag">−1.5 pts</span>
+    <h3>10. No framing protection (clickjacking)</h3>
+    <dl>
+      <dt>What we found</dt><dd>Neither X-Frame-Options nor CSP &#34;frame-ancestors&#34; is set.</dd>
+      <dt>Why it matters</dt><dd>Another site could load yours inside an invisible frame to trick users into clicking things.</dd>
+      <dt>Recommendation</dt><dd>Add &#34;Content-Security-Policy: frame-ancestors &#39;self&#39;&#34; or &#34;X-Frame-Options: SAMEORIGIN&#34;.</dd>
+      <dt>Effort</dt><dd>Low (minutes, config change)</dd>
+      
+    </dl>
+  </article>
+  
+  <article class="finding low">
+    <span class="sev low">Low</span> <span class="tag">Cookies</span> <span class="tag">Missing hardening</span>
+    <span class="tag">−1.0 pts</span>
+    <h3>11. Session cookies without SameSite</h3>
+    <dl>
+      <dt>What we found</dt><dd>Session cookies without &#34;SameSite&#34;: PHPSESSID.</dd>
+      <dt>Why it matters</dt><dd>SameSite reduces the risk of another site performing actions on behalf of a logged-in user (CSRF).</dd>
+      <dt>Recommendation</dt><dd>Add &#34;SameSite=Lax&#34; (or Strict) to session cookies.</dd>
+      <dt>Effort</dt><dd>Low (minutes, config change)</dd>
+      <dt>Evidence</dt><dd><pre>names: PHPSESSID
+</pre></dd>
+    </dl>
+  </article>
+  
+  <article class="finding low">
+    <span class="sev low">Low</span> <span class="tag">DNS</span> <span class="tag">Missing hardening</span>
+    <span class="tag">−1.0 pts</span>
+    <h3>12. No CAA record</h3>
+    <dl>
+      <dt>What we found</dt><dd>No CAA records on clinica-demo.example.</dd>
+      <dt>Why it matters</dt><dd>CAA states which authorities may issue certificates for your domain, making a fraudulent certificate harder to obtain.</dd>
+      <dt>Recommendation</dt><dd>Publish e.g. &#34;0 issue \&#34;letsencrypt.org\&#34;&#34; (add whichever authority your provider uses).</dd>
+      <dt>Effort</dt><dd>Low (minutes, config change)</dd>
+      <dt>Evidence</dt><dd><pre>domain: clinica-demo.example
+</pre></dd>
+    </dl>
+  </article>
+  
+  <article class="finding low">
+    <span class="sev low">Low</span> <span class="tag">DNS</span> <span class="tag">Missing hardening</span>
+    <span class="tag">−1.0 pts</span>
+    <h3>13. DNSSEC not enabled</h3>
+    <dl>
+      <dt>What we found</dt><dd>No DS record for clinica-demo.example in the parent zone.</dd>
+      <dt>Why it matters</dt><dd>DNSSEC prevents forged DNS answers for your domain. Many registrars enable it with one click.</dd>
+      <dt>Recommendation</dt><dd>Enable DNSSEC in your DNS provider/registrar panel.</dd>
+      <dt>Effort</dt><dd>Medium (needs testing)</dd>
+      <dt>Evidence</dt><dd><pre>domain: clinica-demo.example
+</pre></dd>
+    </dl>
+  </article>
+  
+  <article class="finding low">
+    <span class="sev low">Low</span> <span class="tag">Information exposure</span> <span class="tag">Missing hardening</span>
+    <span class="tag">−1.0 pts</span>
+    <h3>14. Server discloses software version</h3>
+    <dl>
+      <dt>What we found</dt><dd>Header server: &#34;Apache/2.4.41 (Ubuntu)&#34;.</dd>
+      <dt>Why it matters</dt><dd>Exact versions make it easier for attackers to look up known flaws. This alone does not mean the site is vulnerable.</dd>
+      <dt>Recommendation</dt><dd>Hide versions (Apache: ServerTokens Prod; Nginx: server_tokens off; PHP: expose_php=Off) and keep software updated.</dd>
+      <dt>Effort</dt><dd>Low (minutes, config change)</dd>
+      <dt>Evidence</dt><dd><pre>header: server
+value: Apache/2.4.41 (Ubuntu)
+</pre></dd>
+    </dl>
+  </article>
+  
+  <article class="finding low">
+    <span class="sev low">Low</span> <span class="tag">Information exposure</span> <span class="tag">Missing hardening</span>
+    <span class="tag">−1.0 pts</span>
+    <h3>15. Site discloses CMS version (WordPress 6.2.1)</h3>
+    <dl>
+      <dt>What we found</dt><dd>Meta generator tag: &#34;WordPress 6.2.1&#34;.</dd>
+      <dt>Why it matters</dt><dd>It tells anyone the exact version in use; if outdated, it is an easy target for automated attacks.</dd>
+      <dt>Recommendation</dt><dd>Keep the CMS and plugins updated (what matters most) and remove the generator tag.</dd>
+      <dt>Effort</dt><dd>Low (minutes, config change)</dd>
+      <dt>Evidence</dt><dd><pre>value: WordPress 6.2.1
+</pre></dd>
+    </dl>
+  </article>
+  
+  <article class="finding info">
+    <span class="sev info">Info</span> <span class="tag">Email security</span> <span class="tag">Recommendation</span>
+    
+    <h3>16. No MTA-STS for inbound email</h3>
+    <dl>
+      <dt>What we found</dt><dd>No _mta-sts.clinica-demo.example record was found.</dd>
+      <dt>Why it matters</dt><dd>MTA-STS forces email sent to you to travel encrypted. An advanced improvement, not urgent for most small businesses.</dd>
+      <dt>Recommendation</dt><dd>Consider MTA-STS and TLS-RPT once the basics (SPF, DKIM, DMARC) are in place.</dd>
+      <dt>Effort</dt><dd>Medium (needs testing)</dd>
+      <dt>Evidence</dt><dd><pre>domain: clinica-demo.example
+</pre></dd>
+    </dl>
+  </article>
+  
+  <article class="finding info">
+    <span class="sev info">Info</span> <span class="tag">Security headers</span> <span class="tag">Recommendation</span>
+    
+    <h3>17. No explicit Referrer-Policy</h3>
+    <dl>
+      <dt>What we found</dt><dd>No Referrer-Policy is sent (modern browsers apply a reasonable default).</dd>
+      <dt>Why it matters</dt><dd>Controls how much of your URLs is shared with other sites. Low impact.</dd>
+      <dt>Recommendation</dt><dd>Add &#34;Referrer-Policy: strict-origin-when-cross-origin&#34;.</dd>
+      <dt>Effort</dt><dd>Low (minutes, config change)</dd>
+      
+    </dl>
+  </article>
+  
+  <article class="finding info">
+    <span class="sev info">Info</span> <span class="tag">Security headers</span> <span class="tag">Recommendation</span>
+    
+    <h3>18. No Permissions-Policy</h3>
+    <dl>
+      <dt>What we found</dt><dd>No Permissions-Policy header is sent.</dd>
+      <dt>Why it matters</dt><dd>Lets you disable browser features your site does not use (camera, microphone, geolocation). Minor improvement.</dd>
+      <dt>Recommendation</dt><dd>Add e.g. &#34;Permissions-Policy: camera=(), microphone=(), geolocation=()&#34;.</dd>
+      <dt>Effort</dt><dd>Low (minutes, config change)</dd>
+      
+    </dl>
+  </article>
+  
+  <article class="finding info">
+    <span class="sev info">Info</span> <span class="tag">Information exposure</span> <span class="tag">Recommendation</span>
+    
+    <h3>19. No security.txt</h3>
+    <dl>
+      <dt>What we found</dt><dd>No /.well-known/security.txt with a Contact field was found.</dd>
+      <dt>Why it matters</dt><dd>Tells people who find a security issue how to reach you. Minor, free improvement.</dd>
+      <dt>Recommendation</dt><dd>Publish /.well-known/security.txt with &#34;Contact: mailto:security@your-domain&#34; and &#34;Expires:&#34; (see securitytxt.org).</dd>
+      <dt>Effort</dt><dd>Low (minutes, config change)</dd>
+      
+    </dl>
+  </article>
+  
+</section>
+
+
+
+<section><h2>Controls passed (11)</h2>
+  <ul class="passlist"><li>SPF record published</li><li>Single SPF record</li><li>SPF within lookup limit</li><li>DMARC policy published</li><li>DMARC record valid</li><li>DKIM key published (selector1)</li><li>Website answers over HTTPS</li><li>HTTP redirects to HTTPS</li><li>Trusted certificate valid for the domain</li><li>Session cookies use HttpOnly</li><li>Multiple name servers</li></ul>
+</section>
+
+
+<section><h2>Technical details</h2>
+  
+  <div class="card table-wrap"><table>
+    <tr><th>DNS</th><td>
+      A: 192.0.2.10<br>
+      AAAA: —<br>
+      NS: ns1.hosting-demo.example, ns2.hosting-demo.example<br>
+      MX: 0 clinica-demo-example.mail.protection.outlook.com<br>
+      CAA: —
+    </td></tr>
+    <tr><th>SPF</th><td><code>v=spf1 include:spf.protection.outlook.com include:servers.mcsv.net ?all</code></td></tr>
+    <tr><th>DMARC</th><td><code>v=DMARC1; p=none</code></td></tr>
+    <tr><th>DKIM</th><td>selector1</td></tr>
+    
+    <tr><th>TLS</th><td>TLSv1.2 · ECDHE-RSA-AES128-GCM-SHA256
+      <br>Legacy: TLSv1=supported TLSv1.1=supported </td></tr>
+    <tr><th>Certificate</th><td>CN=clinica-demo.example · Issuer: Let&#39;s Encrypt (R11)<br>
+      2026-07-18 → 2026-10-09 (5 days) · RSA 2048 · sha256<br>
+      SAN: clinica-demo.example, www.clinica-demo.example</td></tr>
+    
+    <tr><th>HTTP</th><td>http://clinica-demo.example/ → 301<br>https://clinica-demo.example/ → 200<br>
+      https://clinica-demo.example/ → 200<br></td></tr>
+    <tr><th>Headers</th><td><pre>server: Apache/2.4.41 (Ubuntu)
+x-powered-by: PHP/7.4.3
+content-type: text/html; charset=UTF-8
+</pre></td></tr>
+    <tr><th>Cookies</th><td>PHPSESSID (Secure=False, HttpOnly=True, SameSite=None)<br></td></tr>
+    <tr><th>Technologies</th><td>Apache 2.4.41 <span class="muted small">(Server header)</span>, PHP 7.4.3 <span class="muted small">(X-Powered-By header)</span>, WordPress 6.2.1 <span class="muted small">(meta generator)</span></td></tr>
+  </table></div>
+  
+</section>
+
+
+<section class="card">
+  <h3>Methodology and limitations</h3>
+  
+  <p class="small muted">Automated assessment of publicly observable security controls, performed passively (public DNS queries, one TLS connection and at most 3 HTTP requests). It does not replace a full professional audit or a penetration test, does not guarantee the absence of vulnerabilities and does not assess internal systems, devices, passwords, backups or processes. Results reflect what was observable at the time of the scan. Scoring: 100 points across email (30), HTTPS (25), headers (15), cookies (10), DNS (10) and exposure (10); a critical finding caps the score at 40 and a high one at 70.</p>
+  
+</section>
+</main>
+</body></html>
