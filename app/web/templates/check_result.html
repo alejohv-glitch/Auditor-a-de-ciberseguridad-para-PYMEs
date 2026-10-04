@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% from "_macros.html" import scorebox, counts %}
+{% block content %}
+{% if scan.status == 'failed' %}
+  <div class="card"><h1>No pudimos analizar {{ scan.hostname }}</h1><p>{{ scan.error_message }}</p><a class="btn secondary" href="/check">Probar otro dominio</a></div>
+{% else %}
+  <h1>Resultado para {{ scan.hostname }}</h1>
+  <p class="muted small">Análisis del {{ scan.created_at.strftime('%d/%m/%Y %H:%M') }} UTC · Evaluación automatizada de controles públicamente observables.</p>
+  <div class="card">{{ scorebox(scan.score, scan.grade) }}<p></p>{{ counts(report.score.counts, report.score.passed) }}</div>
+  <div class="card"><h2>Resumen</h2>{% for l in report.summary %}<p>{{ l }}</p>{% endfor %}</div>
+  <h2>Problemas principales</h2>
+  {% for f in teaser %}
+    <div class="finding {{ f.severity }}"><span class="sev {{ f.severity }}">{{ f.severity_label }}</span> <span class="tag">{{ f.category_label }}</span>
+      <h3>{{ f.title }}</h3><p>{{ f.found }}</p><p class="muted">{{ f.why }}</p></div>
+  {% else %}<p>No se encontraron problemas en los controles analizados.</p>{% endfor %}
+  <div class="locked card">
+    {% if hidden > 0 %}<h3>{{ hidden }} problema{{ 's' if hidden > 1 }} más y cómo solucionar cada uno</h3>{% else %}<h3>Cómo solucionar cada problema, paso a paso</h3>{% endif %}
+    <p class="muted">Cree una cuenta gratuita para ver el informe completo con evidencias y recomendaciones, y active la vigilancia para que le avisemos si algo cambia.</p>
+    <a class="btn" href="/register">Obtener el informe completo gratis</a>
+    <p class="small muted">¿Prefiere que un consultor lo revise y le explique qué hacer? <a href="mailto:{{ contact_email }}?subject=Informe%20revisado%20{{ scan.hostname }}">Informe revisado (99 €)</a></p>
+  </div>
+{% endif %}
+{% endblock %}

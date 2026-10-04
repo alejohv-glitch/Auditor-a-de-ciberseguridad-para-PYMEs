@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Su plan: {{ plans[org.plan].name }}</h1>
+<div class="grid">
+{% for key, p in plans.items() if key != 'free' %}
+  <div class="card plan {% if key == org.plan %}featured{% endif %}"><h3>{{ p.name }}</h3>
+    <div class="price">{{ (p.price_cents/100)|int }} €<small>/mes + IVA</small></div>
+    <ul class="small"><li>{{ p.domains }} dominios</li><li>Vigilancia y alertas: {{ p.channels|join(', ') }}</li><li>Historial {{ p.history_days }} días</li>{% if p.white_label %}<li>Marca propia</li>{% endif %}<li>Soporte: {{ p.support }}</li></ul>
+    {% if key != org.plan %}<form method="post" action="/app/billing/checkout"><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="plan" value="{{ key }}"><button class="btn">Elegir {{ p.name }}</button></form>{% else %}<p><strong>Plan actual</strong></p>{% endif %}
+  </div>
+{% endfor %}
+</div>
+{% if provider == 'manual' %}<p class="small muted">Durante el lanzamiento el alta se gestiona por email con factura (transferencia o tarjeta). Activamos el plan en menos de 24 h laborables.</p>{% endif %}
+<div class="card"><h3>Servicios puntuales</h3>{% for s in services %}<p><strong>{{ s.name }} · {{ (s.price_cents/100)|int }} €</strong><br><span class="muted">{{ s.includes }}</span></p>{% endfor %}
+<a class="btn secondary" href="mailto:{{ contact_email }}?subject=Servicio%20de%20revisi%C3%B3n">Solicitar</a></div>
+{% endblock %}

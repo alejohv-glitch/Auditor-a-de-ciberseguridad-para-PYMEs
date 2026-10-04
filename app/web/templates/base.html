@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}{{ app_name }} · Seguridad externa y correo para pymes{% endblock %}</title>
+<meta name="description" content="Evaluación automatizada y pasiva de los controles de seguridad públicamente observables de su dominio: correo (SPF, DKIM, DMARC), HTTPS, certificados y cabeceras. Informe claro en español.">
+<link rel="stylesheet" href="/static/style.css">
+<script src="/static/app.js" defer></script>
+{% block head %}{% endblock %}
+</head>
+<body>
+<header class="nav noprint"><div class="wrap">
+  <a class="logo" href="/">{{ app_name[:3] }}<span>{{ app_name[3:] }}</span></a>
+  <nav class="links">
+    {% if user %}
+      <a href="/app">Panel</a><a href="/app/settings">Ajustes</a><a href="/app/billing">Plan</a>
+      {% if user.is_admin %}<a href="/admin">Admin</a>{% endif %}
+      <form method="post" action="/logout"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="linkbtn">Salir</button></form>
+    {% else %}
+      <a href="/#como-funciona">Cómo funciona</a><a href="/#precios">Precios</a><a href="/demo">Informe de ejemplo</a>
+      <a href="/login">Entrar</a><a class="btn small" href="/register">Crear cuenta</a>
+    {% endif %}
+  </nav>
+</div></header>
+<main class="wrap">
+{% if request.query_params.get('err') %}<div class="alert error">{{ request.query_params.get('err') }}</div>{% endif %}
+{% if request.query_params.get('ok') %}<div class="alert ok">Cambios guardados.</div>{% endif %}
+{% block content %}{% endblock %}
+</main>
+<footer class="footer noprint"><div class="wrap">
+  <p>{{ app_name }} realiza una <strong>evaluación automatizada de controles de seguridad públicamente observables</strong>. No es una auditoría completa ni un test de intrusión y no garantiza la ausencia de vulnerabilidades.</p>
+  <p><a href="/terms">Condiciones y limitaciones</a> · <a href="/privacy">Privacidad</a> · <a href="mailto:{{ contact_email }}">{{ contact_email }}</a></p>
+</div></footer>
+</body>
+</html>

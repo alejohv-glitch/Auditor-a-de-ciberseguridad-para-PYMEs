@@ -1,0 +1,127 @@
+{% from "_macros.html" import scorebox, counts, sev %}
+<!doctype html>
+<html lang="{{ report.lang }}">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ 'Informe de seguridad' if report.lang == 'es' else 'Security report' }} · {{ scan.hostname }}</title>
+{% if standalone %}<style>{{ inline_css|safe }}</style>{% else %}<link rel="stylesheet" href="/static/style.css"><script src="/static/app.js" defer></script>{% endif %}
+{% if brand and brand.color %}<style nonce="{{ nonce }}">:root { --brand: {{ brand.color }}; }</style>{% endif %}
+</head>
+<body>
+{% set es = report.lang == 'es' %}
+<main class="wrap">
+{% if not standalone %}
+<div class="toolbar noprint">
+  <a class="btn secondary small" href="{{ '/' if demo and not user else '/app' }}">← {{ 'Volver' if es else 'Back' }}</a>
+  <a class="btn secondary small" href="?lang={{ report.lang }}&level=basic">{{ 'Vista ejecutiva' if es else 'Executive view' }}</a>
+  {% if demo or technical_allowed %}<a class="btn secondary small" href="?lang={{ report.lang }}&level=technical">{{ 'Vista técnica' if es else 'Technical view' }}</a>{% endif %}
+  <a class="btn secondary small" href="?lang={{ 'en' if es else 'es' }}&level={{ level }}">{{ 'English' if es else 'Español' }}</a>
+  <button class="btn small" data-print>{{ 'Descargar PDF / Imprimir' if es else 'Download PDF / Print' }}</button>
+  {% if can_export %}<a class="btn secondary small" href="/scans/{{ scan.public_id }}/export.json">JSON</a>{% endif %}
+</div>
+{% endif %}
+{% if demo %}<div class="alert demo">DEMO — {{ 'Datos ficticios con fines de demostración. No corresponden a ninguna empresa real.' if es else 'Fictitious data for demonstration purposes. Not a real company.' }}</div>{% endif %}
+
+<section class="report-cover">
+  <p class="muted">{{ brand.name if brand else app_name }} · {{ 'Informe de postura de seguridad externa' if es else 'External security posture report' }}</p>
+  <h1>{{ scan.domain.client_name if scan.domain and scan.domain.client_name else scan.hostname }}</h1>
+  <p class="muted">{{ 'Dominio' if es else 'Domain' }}: <strong>{{ scan.hostname }}</strong> · {{ 'Fecha' if es else 'Date' }}: {{ scan.created_at.strftime('%d/%m/%Y %H:%M') }} UTC · {{ 'Versión de análisis' if es else 'Analysis version' }} {{ scan.analysis_version }}</p>
+  <div class="card">{{ scorebox(scan.score, scan.grade, 'Puntuación de seguridad' if es else 'Security score') }}
+    {% if report.score.cap %}<p class="small muted">{{ 'Puntuación limitada por existir hallazgos de severidad' if es else 'Score capped because of' }} «{{ report.score.cap }}» ({{ 'sin límite sería' if es else 'uncapped' }} {{ report.score.raw_score }}).</p>{% endif %}
+    <p></p>{{ counts(report.score.counts, report.score.passed) }}
+  </div>
+  {% if scan.changes and not scan.changes.get('first_scan') %}
+  <div class="card"><h3>{{ 'Cambios desde el análisis anterior' if es else 'Changes since previous scan' }}</h3>
+    <p>{{ scan.changes.score_before }} → {{ scan.changes.score_after }}
+      <span class="delta {{ 'up' if scan.changes.score_delta >= 0 else 'down' }}">{{ '%+d'|format(scan.changes.score_delta) }}</span>
+      · {{ 'Corregidos' if es else 'Fixed' }}: {{ scan.changes.fixed|length }} · {{ 'Nuevos' if es else 'New' }}: {{ scan.changes.new|length }}</p>
+  </div>{% endif %}
+</section>
+
+<section>
+  <h2>{{ 'Resumen ejecutivo' if es else 'Executive summary' }}</h2>
+  <div class="card">{% for l in report.summary %}<p>{{ l }}</p>{% endfor %}</div>
+  {% if scan.reviewer_notes %}<div class="card"><h3>{{ 'Notas del consultor' if es else 'Consultant notes' }}</h3><p>{{ scan.reviewer_notes }}</p></div>{% endif %}
+  <h3>{{ 'Puntuación por área' if es else 'Score by area' }}</h3>
+  <div class="table-wrap"><table>
+    <tr><th>{{ 'Área' if es else 'Area' }}</th><th>{{ 'Puntos' if es else 'Points' }}</th><th></th></tr>
+    {% for c in report.categories if c.applicable %}
+    <tr><td>{{ c.label }}</td><td>{{ c.earned }} / {{ c.weight }}</td><td><meter min="0" max="{{ c.weight }}" value="{{ c.earned }}"></meter></td></tr>
+    {% endfor %}
+  </table></div>
+</section>
+
+<section>
+  <h2>{{ 'Problemas por prioridad' if es else 'Issues by priority' }} ({{ report.problems|length }})</h2>
+  {% for f in report.problems %}
+  <article class="finding {{ f.severity }}">
+    {{ sev(f) }} <span class="tag">{{ f.category_label }}</span> <span class="tag">{{ f.kind_label }}</span>
+    {% if f.points_lost %}<span class="tag">−{{ f.points_lost }} {{ 'pts' }}</span>{% endif %}
+    <h3>{{ loop.index }}. {{ f.title }}</h3>
+    <dl>
+      <dt>{{ 'Qué encontramos' if es else 'What we found' }}</dt><dd>{{ f.found }}</dd>
+      <dt>{{ 'Por qué importa' if es else 'Why it matters' }}</dt><dd>{{ f.why }}</dd>
+      <dt>{{ 'Recomendación' if es else 'Recommendation' }}</dt><dd>{{ f.fix }}</dd>
+      <dt>{{ 'Dificultad' if es else 'Effort' }}</dt><dd>{{ f.effort_label }}</dd>
+      {% if level == 'technical' and f.evidence %}<dt>{{ 'Evidencia' if es else 'Evidence' }}</dt><dd><pre>{% for k, v in f.evidence.items() %}{{ k }}: {{ v|join(', ') if v is iterable and v is not string and v is not mapping else v }}
+{% endfor %}</pre></dd>{% endif %}
+    </dl>
+  </article>
+  {% else %}<p>{{ 'No se encontraron problemas en los controles analizados.' if es else 'No issues found in the analysed controls.' }}</p>{% endfor %}
+</section>
+
+{% if report.unknown %}
+<section><h2>{{ 'No verificado' if es else 'Not verified' }}</h2>
+  {% for f in report.unknown %}<div class="finding"><span class="sev unknown">{{ 'No verificado' if es else 'Not verified' }}</span><h3>{{ f.title }}</h3><p class="muted">{% if f.evidence.get('reason') == 'blocked_response' %}{{ 'La web bloqueó nuestra petición automatizada; control no evaluado.' if es else 'The website blocked our automated request; control not assessed.' }}{% elif f.rule_id == 'dkim_found' %}{{ f.found }}{% else %}{{ 'No se pudo comprobar en este análisis (tiempo de espera o respuesta incompleta).' if es else 'Could not be checked in this scan (timeout or incomplete response).' }}{% endif %}</p></div>{% endfor %}
+</section>{% endif %}
+
+<section><h2>{{ 'Controles correctos' if es else 'Controls passed' }} ({{ report.passed|length }})</h2>
+  <ul class="passlist">{% for f in report.passed %}<li>{{ f.title }}</li>{% endfor %}</ul>
+</section>
+
+{% if level == 'technical' %}
+<section><h2>{{ 'Detalles técnicos' if es else 'Technical details' }}</h2>
+  {% set rf = scan.raw_facts or {} %}
+  <div class="card table-wrap"><table>
+    <tr><th>DNS</th><td>
+      A: {{ (rf.dns or {}).get('A', {}).get('records', [])|join(', ') or '—' }}<br>
+      AAAA: {{ (rf.dns or {}).get('AAAA', {}).get('records', [])|join(', ') or '—' }}<br>
+      NS: {{ (rf.dns or {}).get('NS', {}).get('records', [])|join(', ') or '—' }}<br>
+      MX: {% for m in (rf.dns or {}).get('MX', {}).get('records', []) %}{{ m.preference }} {{ m.exchange }}{{ ', ' if not loop.last }}{% else %}—{% endfor %}<br>
+      CAA: {% for c in (rf.dns or {}).get('CAA', {}).get('records', []) %}{{ c.tag }} {{ c.value }}{{ ', ' if not loop.last }}{% else %}—{% endfor %}
+    </td></tr>
+    <tr><th>SPF</th><td><code>{{ ((rf.email or {}).get('spf') or {}).get('records', [])|join(' | ') or '—' }}</code></td></tr>
+    <tr><th>DMARC</th><td><code>{{ ((rf.email or {}).get('dmarc') or {}).get('records', [])|join(' | ') or '—' }}</code></td></tr>
+    <tr><th>DKIM</th><td>{{ ((rf.email or {}).get('dkim') or {}).get('found', [])|join(', ') or ('ninguno con selectores comunes' if es else 'none with common selectors') }}</td></tr>
+    {% set cert = (rf.tls or {}).get('certificate') %}
+    <tr><th>TLS</th><td>{{ (rf.tls or {}).get('version') or '—' }} · {{ (rf.tls or {}).get('cipher') or '' }}
+      {% if (rf.tls or {}).get('legacy') %}<br>Legacy: {% for k, v in rf.tls.legacy.items() %}{{ k }}={{ v }} {% endfor %}{% endif %}</td></tr>
+    {% if cert %}<tr><th>{{ 'Certificado' if es else 'Certificate' }}</th><td>CN={{ cert.subject_cn }} · {{ 'Emisor' if es else 'Issuer' }}: {{ cert.issuer_org }} ({{ cert.issuer_cn }})<br>
+      {{ cert.not_before[:10] }} → {{ cert.not_after[:10] }} ({{ cert.days_remaining }} {{ 'días' if es else 'days' }}) · {{ cert.key_type }} {{ cert.key_size }} · {{ cert.signature_algorithm }}<br>
+      SAN: {{ cert.sans|join(', ') }}</td></tr>{% endif %}
+    {% set web = rf.web or {} %}
+    <tr><th>HTTP</th><td>{% for h in (web.get('http') or {}).get('chain', []) %}{{ h.url }} → {{ h.status or h.error }}<br>{% endfor %}
+      {% for h in (web.get('https') or {}).get('chain', []) %}{{ h.url }} → {{ h.status or h.error }}<br>{% endfor %}</td></tr>
+    {% if web.get('final') %}<tr><th>{{ 'Cabeceras' if es else 'Headers' }}</th><td><pre>{% for k, v in web.final.headers.items() %}{{ k }}: {{ v }}
+{% endfor %}</pre></td></tr>
+    <tr><th>Cookies</th><td>{% for c in web.final.cookies %}{{ c.name }} (Secure={{ c.secure }}, HttpOnly={{ c.httponly }}, SameSite={{ c.samesite }})<br>{% else %}—{% endfor %}</td></tr>{% endif %}
+    <tr><th>{{ 'Tecnologías' if es else 'Technologies' }}</th><td>{% for t in web.get('technologies', []) %}{{ t.name }}{% if t.version %} {{ t.version }}{% endif %} <span class="muted small">({{ t.source }})</span>{{ ', ' if not loop.last }}{% else %}—{% endfor %}</td></tr>
+  </table></div>
+  {% if user and not demo and not standalone %}
+  <form class="card noprint" method="post" action="/scans/{{ scan.public_id }}/notes"><input type="hidden" name="csrf" value="{{ csrf }}">
+    <label for="notes">{{ 'Notas del consultor (aparecen en el informe)' if es else 'Consultant notes (shown in the report)' }}</label>
+    <textarea id="notes" name="notes" rows="4" maxlength="5000">{{ scan.reviewer_notes or '' }}</textarea><p></p><button class="btn small">{{ 'Guardar notas' if es else 'Save notes' }}</button>
+  </form>{% endif %}
+</section>
+{% endif %}
+
+<section class="card">
+  <h3>{{ 'Metodología y limitaciones' if es else 'Methodology and limitations' }}</h3>
+  {% if es %}
+  <p class="small muted">Evaluación automatizada de controles de seguridad públicamente observables, realizada de forma pasiva (consultas DNS públicas, una conexión TLS y como máximo 3 peticiones HTTP). No sustituye a una auditoría profesional completa ni a un test de intrusión, no garantiza la ausencia de vulnerabilidades y no evalúa sistemas internos, equipos, contraseñas, copias de seguridad ni procesos. Los resultados reflejan lo observable en la fecha y hora del análisis. Puntuación: 100 puntos repartidos entre correo (30), HTTPS (25), cabeceras (15), cookies (10), DNS (10) y exposición (10); un hallazgo crítico limita la nota a 40 y uno alto a 70.</p>
+  {% else %}
+  <p class="small muted">Automated assessment of publicly observable security controls, performed passively (public DNS queries, one TLS connection and at most 3 HTTP requests). It does not replace a full professional audit or a penetration test, does not guarantee the absence of vulnerabilities and does not assess internal systems, devices, passwords, backups or processes. Results reflect what was observable at the time of the scan. Scoring: 100 points across email (30), HTTPS (25), headers (15), cookies (10), DNS (10) and exposure (10); a critical finding caps the score at 40 and a high one at 70.</p>
+  {% endif %}
+</section>
+</main>
+</body></html>

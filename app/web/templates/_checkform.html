@@ -1,0 +1,11 @@
+<form method="post" action="/check" class="card checkbox-card">
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  <div class="form-row">
+    <div><label for="domain">Su dominio</label><input id="domain" type="text" name="domain" placeholder="suempresa.es" value="{{ domain or '' }}" required maxlength="253" autocomplete="url"></div>
+    <div><label for="lemail">Email (opcional, para enviarle el resultado)</label><input id="lemail" type="email" name="email" value="{{ email or '' }}" maxlength="254"></div>
+  </div>
+  <label class="check"><input type="checkbox" name="authorized" value="yes" required> <span>Confirmo que soy propietario de este dominio o estoy autorizado para evaluarlo. <span class="muted small">(I confirm that I own or am authorized to assess this domain.)</span></span></label>
+  <label class="check"><input type="checkbox" name="marketing" value="yes"> <span class="small muted">Acepto recibir consejos de seguridad ocasionales por email (puede darse de baja cuando quiera).</span></label>
+  <p></p><button class="btn">Analizar gratis</button>
+  <span class="muted small">&nbsp;Pasivo y no intrusivo · ~30 segundos · sin registro</span>
+</form>

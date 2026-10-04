@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Condiciones de uso y limitaciones</h1>
+<div class="card">
+<h3>Qué es el servicio</h3>
+<p>Una evaluación automatizada de controles de seguridad públicamente observables de un dominio (correo, DNS, HTTPS, certificado, cabeceras y configuración web visible), realizada de forma pasiva y no intrusiva.</p>
+<h3>Qué NO es</h3>
+<ul><li>No es una auditoría de seguridad completa ni un test de intrusión.</li><li>No garantiza la ausencia de vulnerabilidades ni que su empresa esté protegida.</li><li>No evalúa sistemas internos, equipos, contraseñas, copias de seguridad, formación ni procesos.</li><li>Los resultados reflejan lo observable en el momento del análisis y pueden cambiar.</li></ul>
+<h3>Uso permitido</h3>
+<p>Solo puede analizar dominios de su propiedad o que esté autorizado a evaluar, y debe confirmarlo antes de cada alta. Guardamos esa confirmación. Está prohibido usar el servicio para evaluar a terceros sin permiso. Podemos limitar o cancelar cuentas que hagan un uso abusivo.</p>
+<h3>Cómo analizamos</h3>
+<p>Consultas DNS públicas, una conexión TLS (y hasta dos intentos breves para comprobar protocolos obsoletos) y como máximo 3 peticiones HTTP GET estándar, identificadas con nuestro User-Agent. No hacemos escaneo de puertos, fuerza bruta, explotación, envío de emails ni rastreo de la web.</p>
+<p class="small muted">Plantilla orientativa: revísela con un profesional antes de lanzar.</p>
+</div>
+{% endblock %}

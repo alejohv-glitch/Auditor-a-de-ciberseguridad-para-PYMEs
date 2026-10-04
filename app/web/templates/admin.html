@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Métricas internas (últimos {{ m.days }} días)</h1>
+<h2>Negocio</h2>
+<div class="grid k">
+  <div class="stat"><div class="n">{{ m.users }}</div><div class="l">Usuarios</div></div>
+  <div class="stat"><div class="n">{{ m.free_orgs }}</div><div class="l">Free</div></div>
+  <div class="stat"><div class="n">{{ m.paid_orgs }}</div><div class="l">De pago</div></div>
+  <div class="stat"><div class="n">{{ m.conversion }}%</div><div class="l">Conversión</div></div>
+  <div class="stat"><div class="n">{{ '%.0f'|format(m.mrr_eur) }} €</div><div class="l">MRR</div></div>
+  <div class="stat"><div class="n">{{ m.churn_rate }}%</div><div class="l">Churn ({{ m.churned_subs }})</div></div>
+  <div class="stat"><div class="n">{{ m.leads }}</div><div class="l">Leads ({{ m.leads_with_email }} con email)</div></div>
+  <div class="stat"><div class="n">{{ m.domains }}</div><div class="l">Dominios ({{ m.monitored }} vigilados)</div></div>
+</div>
+<h2>Técnicas</h2>
+<div class="grid k">
+  <div class="stat"><div class="n">{{ m.scans }}</div><div class="l">Análisis</div></div>
+  <div class="stat"><div class="n">{{ m.scans_per_user }}</div><div class="l">Análisis/usuario</div></div>
+  <div class="stat"><div class="n">{{ m.success_rate if m.success_rate is not none else '—' }}%</div><div class="l">Éxito</div></div>
+  <div class="stat"><div class="n">{{ m.failure_rate if m.failure_rate is not none else '—' }}%</div><div class="l">Fallos</div></div>
+  <div class="stat"><div class="n">{{ ((m.p50_ms or 0)/1000)|round(1) }}s</div><div class="l">Duración p50</div></div>
+  <div class="stat"><div class="n">{{ ((m.p95_ms or 0)/1000)|round(1) }}s</div><div class="l">Duración p95</div></div>
+</div>
+<div class="card"><p>Por origen: {{ m.scans_by_trigger }}</p><p>Fallos por causa (dependencias externas: dns_timeout, nxdomain…): {{ m.failures_by_code }}</p><p>Orgs por plan: {{ m.by_plan }}</p>
+<p class="small muted">Coste/usuario: ver docs/BUSINESS_PLAN.md (coste de infraestructura fijo ≈ 5–10 €/mes hasta ~1.000 usuarios).</p></div>
+{% endblock %}

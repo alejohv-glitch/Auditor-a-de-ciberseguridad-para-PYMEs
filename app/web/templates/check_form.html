@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Análisis gratuito</h1>
+{% if error %}<div class="alert error">{{ error }}</div>{% endif %}
+{% include "_checkform.html" %}
+{% endblock %}

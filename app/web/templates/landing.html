@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% from "_macros.html" import scorebox, counts %}
+{% block content %}
+<section class="hero">
+  <h1>¿Pueden suplantar su empresa por email?<br>¿Su web genera desconfianza?</h1>
+  <p class="lead">Analizamos en un minuto lo que cualquiera puede ver de su dominio (correo SPF/DKIM/DMARC, HTTPS, certificado y configuración web) y le entregamos un <strong>informe en lenguaje claro</strong>: qué falla, por qué le importa a su negocio y cómo arreglarlo.</p>
+  {% include "_checkform.html" %}
+</section>
+
+<section class="section">
+  <h2>Por qué importa a una pequeña empresa</h2>
+  <div class="grid">
+    <div class="card"><h3>Facturas falsas en su nombre</h3><p class="muted">Si su dominio no tiene DMARC, un estafador puede enviar emails que aparentan venir de usted a sus clientes y proveedores (cambio de IBAN, fraude del CEO).</p></div>
+    <div class="card"><h3>Sus emails acaban en spam</h3><p class="muted">Gmail, Yahoo y Microsoft exigen SPF, DKIM y DMARC a los remitentes masivos y los tienen en cuenta con el resto. Una mala configuración afecta a la entrega de presupuestos y facturas.</p></div>
+    <div class="card"><h3>Le preguntan sus clientes o su aseguradora</h3><p class="muted">Clientes grandes (NIS2) y aseguradoras de ciberriesgo envían cuestionarios y revisan su dominio desde fuera. Mejor saber antes qué verán.</p></div>
+  </div>
+</section>
+
+<section class="section" id="como-funciona">
+  <h2>Cómo funciona</h2>
+  <ol class="steps">
+    <li><strong>Introduce su dominio</strong> y confirma que está autorizado a evaluarlo.</li>
+    <li><strong>Hacemos comprobaciones pasivas</strong>: consultas DNS públicas, una conexión HTTPS y como máximo 3 peticiones web normales. Nada de ataques, escaneo de puertos ni pruebas de contraseñas.</li>
+    <li><strong>Recibe su puntuación y los problemas ordenados por prioridad</strong>, cada uno con su explicación, la evidencia y cómo corregirlo.</li>
+    <li><strong>Active la vigilancia</strong> y le avisamos si algo empeora: certificado a punto de caducar, cambios de DNS o de correo, nuevos problemas.</li>
+  </ol>
+</section>
+
+<section class="section">
+  <h2>Qué comprobamos</h2>
+  <div class="grid">
+    <div class="card"><h3>Correo electrónico</h3><p class="muted">SPF (sintaxis, «all», límite de 10 consultas), DMARC (política, informes), DKIM (selectores habituales), MTA-STS.</p></div>
+    <div class="card"><h3>HTTPS y certificado</h3><p class="muted">Disponibilidad, redirección HTTP→HTTPS, validez, nombre, caducidad, emisor, TLS 1.0/1.1 obsoletos, HSTS.</p></div>
+    <div class="card"><h3>Cabeceras de seguridad</h3><p class="muted">Content-Security-Policy, X-Content-Type-Options, protección anti-clickjacking, Referrer-Policy, Permissions-Policy.</p></div>
+    <div class="card"><h3>Cookies</h3><p class="muted">Atributos Secure, HttpOnly y SameSite en las cookies de sesión visibles.</p></div>
+    <div class="card"><h3>DNS</h3><p class="muted">Redundancia de servidores de nombres, CAA, DNSSEC, registros A/AAAA/MX/NS/TXT.</p></div>
+    <div class="card"><h3>Exposición</h3><p class="muted">Versiones de software publicadas (servidor, PHP, CMS), tecnologías visibles y security.txt.</p></div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>Así es un informe</h2>
+  <div class="card">
+    <div class="alert demo">DEMO: datos ficticios de «{{ 'clinica-demo.example' }}», evaluados con el mismo motor que los análisis reales.</div>
+    {{ scorebox(demo_score.score, demo_score.grade) }}
+    <p></p>{{ counts(demo_score.counts, demo_score.passed) }}
+    {% for f in demo.problems[:3] %}
+      <div class="finding {{ f.severity }}"><span class="sev {{ f.severity }}">{{ f.severity_label }}</span> <span class="tag">{{ f.category_label }}</span>
+      <h3>{{ f.title }}</h3><p class="muted">{{ f.why }}</p></div>
+    {% endfor %}
+    <a class="btn secondary" href="/demo">Ver el informe de ejemplo completo</a>
+  </div>
+  <h3>Una puntuación que se puede explicar</h3>
+  <p class="muted">La puntuación (0–100) reparte 100 puntos entre 6 áreas: correo 30, HTTPS/certificado 25, cabeceras 15, cookies 10, DNS 10, exposición 10. Cada punto perdido está ligado a un hallazgo concreto. Un problema crítico limita la nota a 40 y uno alto a 70, para que un buen promedio no oculte un fallo grave. Las comprobaciones que no se pudieron verificar no restan.</p>
+</section>
+
+<section class="section" id="precios">
+  <h2>Precios</h2>
+  <p class="muted">Precios sin IVA. Cancelación mensual.</p>
+  <div class="grid">
+    {% for key, p in plans.items() %}
+    <div class="card plan {% if key == 'pro' %}featured{% endif %}">
+      <h3>{{ p.name }}</h3>
+      <div class="price">{% if p.price_cents %}{{ (p.price_cents/100)|int }} €<small>/mes</small>{% else %}0 €{% endif %}</div>
+      <ul class="small">
+        <li>{{ p.domains }} dominio{{ 's' if p.domains > 1 }}</li>
+        <li>{% if p.monitoring %}Vigilancia diaria y alertas ({{ p.channels|join(', ') }}){% else %}Análisis manual, sin vigilancia{% endif %}</li>
+        <li>Historial {{ p.history_days }} días</li>
+        <li>{% if p.technical_report %}Informe ejecutivo + técnico, exportable{% else %}Informe ejecutivo completo{% endif %}</li>
+        {% if p.white_label %}<li>Informes con su marca para sus clientes</li>{% endif %}
+        <li>{{ p.seats }} usuario{{ 's' if p.seats > 1 }}</li>
+      </ul>
+      <a class="btn {% if key != 'pro' %}secondary{% endif %}" href="/register">{% if key == 'free' %}Empezar gratis{% else %}Probar {{ p.name }}{% endif %}</a>
+    </div>
+    {% endfor %}
+  </div>
+  <div class="card">
+    <h3>¿Prefiere que lo revisemos nosotros?</h3>
+    {% for s in services %}<p><strong>{{ s.name }} · {{ (s.price_cents/100)|int }} €</strong><br><span class="muted">{{ s.includes }}</span></p>{% endfor %}
+    <a class="btn secondary" href="mailto:{{ contact_email }}?subject=Informe%20revisado">Solicitar informe revisado</a>
+  </div>
+</section>
+
+<section class="section">
+  <h2>Preguntas frecuentes</h2>
+  <details><summary>¿Es un test de intrusión (pentest)?</summary><p class="muted">No. Es una evaluación automatizada de controles que cualquiera puede observar desde Internet. No intenta explotar fallos ni acceder a nada privado. Un pentest es un servicio distinto, más profundo y más caro.</p></details>
+  <details><summary>¿Puede afectar a mi web o a mi correo?</summary><p class="muted">No. Hacemos consultas DNS públicas, un saludo TLS y como máximo 3 peticiones web normales, como un visitante. No enviamos emails ni escaneamos puertos.</p></details>
+  <details><summary>Si saco buena nota, ¿estoy protegido?</summary><p class="muted">No necesariamente. La nota refleja solo los controles externos analizados en ese momento. No ve sus equipos, contraseñas, copias de seguridad ni su formación. Es un buen punto de partida, no una garantía.</p></details>
+  <details><summary>No soy técnico, ¿podré arreglarlo?</summary><p class="muted">Cada problema incluye qué hacer y una estimación de dificultad. Muchos se corrigen en minutos desde el panel de su proveedor de dominio o de correo. Si lo prefiere, el servicio «Informe + corrección guiada» le acompaña.</p></details>
+  <details><summary>¿Qué datos guardan?</summary><p class="muted">Su email, su dominio y los resultados técnicos. No guardamos su IP en claro. Puede borrar dominios, informes o su cuenta completa en cualquier momento. Ver <a href="/privacy">privacidad</a>.</p></details>
+  <details><summary>Soy agencia o consultor IT, ¿puedo usarlo con mis clientes?</summary><p class="muted">Sí. El plan Agency permite varios dominios de clientes, informes con su marca y notas de revisión propias en cada informe.</p></details>
+</section>
+
+<section class="section card">
+  <h2>Limitaciones (léalas)</h2>
+  <ul class="muted">
+    <li>Evaluación automatizada de controles de seguridad públicamente observables. No sustituye a una auditoría profesional completa ni a un pentest.</li>
+    <li>No garantiza la ausencia de vulnerabilidades. Los resultados dependen de lo observable en el momento del análisis.</li>
+    <li>DKIM no se puede enumerar: si usa un selector poco común, lo indicaremos como «no verificado», no como fallo.</li>
+    <li>Solo debe analizar dominios propios o que esté autorizado a evaluar.</li>
+  </ul>
+  <a class="btn" href="#">Analizar mi dominio gratis</a>
+</section>
+{% endblock %}

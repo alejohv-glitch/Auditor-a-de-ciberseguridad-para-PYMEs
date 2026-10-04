@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Privacidad</h1>
+<div class="card">
+<h3>Qué datos tratamos y por qué</h3>
+<ul>
+<li><strong>Cuenta:</strong> email y contraseña (guardada solo como hash Argon2id). Para darle acceso al servicio.</li>
+<li><strong>Dominios y resultados:</strong> nombre de dominio, datos técnicos públicos observados, puntuaciones e historial. Es el servicio en sí.</li>
+<li><strong>Autorización:</strong> qué usuario confirmó estar autorizado para analizar cada dominio y cuándo. Para prevenir abusos.</li>
+<li><strong>Seguridad:</strong> registros de acciones con un identificador derivado de la IP (hash con clave, truncado); nunca la IP en claro.</li>
+<li><strong>Análisis gratuito sin cuenta:</strong> dominio y, solo si lo facilita, su email. Se borran a los {{ retention }} días.</li>
+</ul>
+<h3>Cuánto tiempo</h3>
+<p>Mientras tenga la cuenta, con el historial limitado por su plan (30 días Free, 1–2 años en planes de pago). Los análisis gratuitos sin cuenta, {{ retention }} días.</p>
+<h3>Sus derechos</h3>
+<p>Puede borrar cada informe, cada dominio (con todo su historial) o su cuenta completa desde la aplicación, de forma inmediata. Para cualquier otra solicitud (acceso, rectificación, portabilidad): <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>.</p>
+<h3>Terceros</h3>
+<p>No vendemos datos. Proveedores: alojamiento y, si lo configura, el envío de emails de alerta. No usamos cookies de analítica ni publicidad; solo cookies técnicas de sesión y seguridad.</p>
+<p class="small muted">Plantilla orientativa: revísela con un profesional antes de lanzar (responsable del tratamiento, base legal, DPO si aplica).</p>
+</div>
+{% endblock %}

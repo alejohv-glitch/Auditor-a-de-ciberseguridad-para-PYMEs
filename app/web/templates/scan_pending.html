@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block head %}<meta http-equiv="refresh" content="3">{% endblock %}
+{% block content %}
+<div class="card center">
+  <h1>Analizando {{ scan.hostname }}…</h1>
+  <div class="spinner" role="status" aria-label="Analizando"></div>
+  <p class="muted">Suele tardar entre 10 y 40 segundos. Esta página se actualiza sola.</p>
+  <p class="muted small">Estado: {{ 'en cola' if scan.status == 'queued' else 'en curso' }}. Si tarda más de 5 minutos se marcará como fallido automáticamente.</p>
+</div>
+{% endblock %}

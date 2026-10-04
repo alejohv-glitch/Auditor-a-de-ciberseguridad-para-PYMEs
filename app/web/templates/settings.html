@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Ajustes</h1>
+<div class="card"><h2>Alertas</h2>
+  <p class="small muted">Canales incluidos en su plan: {{ plan.channels|join(', ') }}.</p>
+  <div class="table-wrap"><table>{% for c in channels %}<tr><td>{{ c.kind }}</td><td>{{ c.target if c.kind == 'email' else c.target[:32] ~ '…' }}</td>
+    <td><form method="post" action="/app/channels/{{ c.id }}/delete"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="linkbtn">eliminar</button></form></td></tr>
+  {% else %}<tr><td class="muted">Sin canales configurados.</td></tr>{% endfor %}</table></div>
+  <form method="post" action="/app/channels"><input type="hidden" name="csrf" value="{{ csrf }}">
+    <div class="form-row">
+      <div><label for="kind">Tipo</label><select id="kind" name="kind">{% for k in ['email', 'webhook', 'discord', 'telegram'] %}<option value="{{ k }}" {% if k not in plan.channels %}disabled{% endif %}>{{ k }}</option>{% endfor %}</select></div>
+      <div><label for="target">Email o URL https del webhook</label><input id="target" type="text" name="target" required maxlength="500"></div>
+      <button class="btn">Añadir</button>
+    </div>
+  </form>
+</div>
+<div class="card"><h2>Informes</h2>
+  <form method="post" action="/app/branding"><input type="hidden" name="csrf" value="{{ csrf }}">
+    <label for="report_lang">Idioma por defecto</label><select id="report_lang" name="report_lang"><option value="es" {% if org.report_lang == 'es' %}selected{% endif %}>Español</option><option value="en" {% if org.report_lang == 'en' %}selected{% endif %}>English</option></select>
+    {% if plan.white_label %}
+      <label for="brand_name">Marca en los informes</label><input id="brand_name" type="text" name="brand_name" value="{{ org.brand_name or '' }}" maxlength="120">
+      <label for="brand_color">Color (#RRGGBB)</label><input id="brand_color" type="text" name="brand_color" value="{{ org.brand_color or '' }}" pattern="#[0-9a-fA-F]{6}" maxlength="7">
+    {% else %}<p class="small muted">Informes con su propia marca: plan Agency.</p>{% endif %}
+    <p></p><button class="btn small">Guardar</button>
+  </form>
+</div>
+<div class="card"><h2>Cuenta</h2><p>{{ user.email }} · plan {{ plan.name }}</p>
+  <form method="post" action="/app/account/delete"><input type="hidden" name="csrf" value="{{ csrf }}">
+    <label for="confirm">Para borrar su cuenta y todos sus datos escriba DELETE</label><input id="confirm" type="text" name="confirm" autocomplete="off">
+    <p></p><button class="btn danger small">Borrar cuenta definitivamente</button></form>
+</div>
+{% endblock %}

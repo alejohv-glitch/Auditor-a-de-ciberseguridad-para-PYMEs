@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card center"><h1>{{ status }}</h1>
+<p class="muted">{% if status == 404 %}No encontrado.{% elif status == 402 %}Esta función requiere un plan de pago.{% else %}{{ detail }}{% endif %}</p>
+<a class="btn secondary" href="/">Volver al inicio</a></div>
+{% endblock %}

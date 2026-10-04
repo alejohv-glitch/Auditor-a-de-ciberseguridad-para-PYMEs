@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% from "_macros.html" import counts %}
+{% block content %}
+<h1>Panel · {{ org.name }}</h1>
+{% if org.is_demo %}<div class="alert demo">DEMO — organización de demostración con datos ficticios.</div>{% endif %}
+{% if request.query_params.get('welcome') %}<div class="alert ok">Cuenta creada. Añada su dominio para el primer análisis.</div>{% endif %}
+<p class="muted small">Plan {{ plan.name }} · {{ rows|length }}/{{ plan.domains }} dominios · {% if plan.monitoring %}vigilancia incluida{% else %}<a href="/app/billing">active la vigilancia con Pro</a>{% endif %}</p>
+{% if rows %}{{ counts(totals, totals.passed) }}{% endif %}
+
+<h2>Dominios</h2>
+{% for r in rows %}
+<div class="card">
+  <div class="toolbar">
+    <h3>{{ r.domain.client_name or r.domain.hostname }}</h3>
+    {% if r.domain.client_name %}<span class="muted">{{ r.domain.hostname }}</span>{% endif %}
+    {% if r.domain.monitoring_enabled %}<span class="tag">Vigilado</span>{% endif %}
+  </div>
+  {% if r.running %}<p>Análisis en curso… <a href="/scans/{{ r.running.public_id }}">ver</a></p>{% endif %}
+  {% if r.scan %}
+  <div class="grid k">
+    <div class="stat"><div class="n">{{ r.scan.score }}</div><div class="l">Puntuación ({{ r.scan.grade }})</div></div>
+    {% if r.prev %}<div class="stat"><div class="n delta {{ 'up' if r.scan.score >= r.prev.score else 'down' }}">{{ '%+d'|format(r.scan.score - r.prev.score) }}</div><div class="l">{{ r.prev.score }} → {{ r.scan.score }}</div></div>{% endif %}
+    <div class="stat"><div class="n critical">{{ r.scan.summary.counts.critical + r.scan.summary.counts.high }}</div><div class="l">Crítico + alto</div></div>
+    <div class="stat"><div class="n medium">{{ r.scan.summary.counts.medium }}</div><div class="l">Medio</div></div>
+    {% if r.changes and not r.changes.get('first_scan') %}<div class="stat"><div class="n ok">{{ r.changes.fixed|length }}</div><div class="l">Corregidos · {{ r.changes.new|length }} nuevos</div></div>{% endif %}
+  </div>
+  <p class="small muted">Último análisis: {{ r.scan.created_at.strftime('%d/%m/%Y %H:%M') }} UTC
+    {% if r.domain.monitoring_enabled and r.domain.next_scan_at %}· Próximo: {{ r.domain.next_scan_at.strftime('%d/%m/%Y %H:%M') }} UTC{% endif %}</p>
+  {% endif %}
+  <div class="toolbar">
+    {% if r.scan %}<a class="btn small" href="/scans/{{ r.scan.public_id }}/report">Ver informe</a>{% endif %}
+    <a class="btn secondary small" href="/app/domains/{{ r.domain.id }}">Historial y vigilancia</a>
+  </div>
+</div>
+{% else %}<p class="muted">Todavía no ha añadido ningún dominio.</p>{% endfor %}
+
+{% if can_add %}
+<form class="card" method="post" action="/app/domains">
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  <h3>Añadir dominio</h3>
+  <div class="form-row">
+    <div><label for="hostname">Dominio</label><input id="hostname" type="text" name="hostname" placeholder="suempresa.es" required maxlength="253"></div>
+    <div><label for="client_name">Nombre del cliente / empresa (opcional)</label><input id="client_name" type="text" name="client_name" maxlength="120"></div>
+  </div>
+  <label class="check"><input type="checkbox" name="authorized" value="yes" required> <span>{{ auth_statement }}</span></label>
+  <p class="small muted">Guardamos quién confirmó la autorización y cuándo. El análisis es pasivo y no intrusivo.</p>
+  <button class="btn">Añadir y analizar</button>
+</form>
+{% else %}<div class="card"><p>Ha alcanzado el límite de dominios de su plan. <a href="/app/billing">Ver planes</a></p></div>{% endif %}
+{% endblock %}

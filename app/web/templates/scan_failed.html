@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card"><h1>El análisis falló</h1>
+<p><strong>{{ scan.hostname }}</strong>: {{ scan.error_message or 'Error desconocido.' }}</p>
+<p class="muted small">Código: {{ scan.error_code }} · No se ha consumido ninguna puntuación ni se han guardado resultados parciales.</p>
+{% if scan.domain_id %}<form method="post" action="/app/domains/{{ scan.domain_id }}/scan"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="btn">Reintentar</button> <a class="btn secondary" href="/app">Volver al panel</a></form>{% endif %}
+</div>
+{% endblock %}

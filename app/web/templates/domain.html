@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block content %}
+<p><a href="/app">← Panel</a></p>
+<h1>{{ d.client_name or d.hostname }}</h1>
+<p class="muted small">{{ d.hostname }} · autorizado el {{ d.authorized_at.strftime('%d/%m/%Y') if d.authorized_at }} ·
+  {% if d.verified_at %}propiedad verificada por DNS{% else %}propiedad no verificada por DNS (opcional){% endif %}</p>
+
+<div class="card"><h2>Puntuación (últimos 90 días)</h2>
+{% if history|length >= 2 %}
+  {% set w = 600 %}{% set h = 140 %}{% set n = history|length %}
+  <svg class="chart" viewBox="0 0 {{ w }} {{ h + 20 }}" role="img" aria-label="Evolución de la puntuación">
+    <line x1="0" y1="{{ h }}" x2="{{ w }}" y2="{{ h }}"></line><line x1="0" y1="0" x2="{{ w }}" y2="0"></line>
+    <text x="2" y="12">100</text><text x="2" y="{{ h - 2 }}">0</text>
+    <polyline points="{% for p in history %}{{ (loop.index0 * (w - 40) / (n - 1) + 30)|round(1) }},{{ (h - p.score * h / 100)|round(1) }} {% endfor %}"></polyline>
+    {% for p in history %}{% if loop.first or loop.last %}<text x="{{ (loop.index0 * (w - 40) / (n - 1) + 22)|round(1) }}" y="{{ h + 16 }}">{{ p.recorded_at.strftime('%d/%m') }} · {{ p.score }}</text>{% endif %}{% endfor %}
+  </svg>
+{% elif latest %}<p>{{ latest.score }}/100 — se mostrará la evolución a partir del segundo análisis.</p>{% else %}<p class="muted">Sin análisis completados.</p>{% endif %}
+</div>
+
+{% if latest and latest.changes and not latest.changes.get('first_scan') %}
+<div class="card"><h2>¿Qué cambió en el último análisis?</h2>
+  <p>{{ latest.changes.score_before }} → {{ latest.changes.score_after }} <span class="delta {{ 'up' if latest.changes.score_delta >= 0 else 'down' }}">{{ '%+d'|format(latest.changes.score_delta) }}</span></p>
+  <p>Corregidos: {{ latest.changes.fixed|join(', ') or '—' }}<br>Nuevos: {{ latest.changes.new|join(', ') or '—' }}</p>
+  {% if latest.changes.facts %}<p class="small">Cambios observados: {% for k in latest.changes.facts %}<span class="tag">{{ k }}</span> {% endfor %}</p>{% endif %}
+</div>{% endif %}
+
+<div class="card"><h2>Vigilancia</h2>
+{% if plan.monitoring %}
+  <form method="post" action="/app/domains/{{ d.id }}/monitoring"><input type="hidden" name="csrf" value="{{ csrf }}">
+    <label class="check"><input type="checkbox" name="enabled" value="yes" {% if d.monitoring_enabled %}checked{% endif %}> <span>Analizar automáticamente y avisar si algo empeora</span></label>
+    <label for="interval">Frecuencia</label>
+    <select id="interval" name="interval"><option value="24" {% if d.monitor_interval_hours == 24 %}selected{% endif %}>Diaria</option><option value="168" {% if d.monitor_interval_hours == 168 %}selected{% endif %}>Semanal</option></select>
+    <p></p><button class="btn small">Guardar</button>
+  </form>
+  <p class="small muted">Avisamos si la puntuación baja 5 puntos o más, aparecen problemas nuevos, cambian NS/MX/SPF/DMARC o el emisor del certificado, o el certificado caduca en 14 días o menos. Configure dónde recibir avisos en <a href="/app/settings">Ajustes</a>.</p>
+{% else %}<p>La vigilancia automática está disponible desde el plan Pro. <a class="btn small" href="/app/billing">Ver planes</a></p>{% endif %}
+</div>
+
+<div class="card"><h2>Análisis</h2>
+  <form method="post" action="/app/domains/{{ d.id }}/scan"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="btn small">Analizar ahora</button></form>
+  <div class="table-wrap"><table><tr><th>Fecha (UTC)</th><th>Origen</th><th>Estado</th><th>Puntuación</th><th></th></tr>
+  {% for s in scans %}<tr><td>{{ s.created_at.strftime('%d/%m/%Y %H:%M') }}</td><td>{{ s.trigger }}</td><td>{{ s.status }}{% if s.error_message %} — {{ s.error_message }}{% endif %}</td>
+    <td>{{ s.score if s.score is not none else '—' }}</td><td><a href="/scans/{{ s.public_id }}">abrir</a></td></tr>{% endfor %}
+  </table></div>
+</div>
+
+<div class="card"><h2>Verificar propiedad (opcional)</h2>
+  <p class="small">Cree un registro TXT <code>{{ verify_name }}</code> con el valor <code>{{ d.verification_token }}</code> y pulse verificar.</p>
+  <form method="post" action="/app/domains/{{ d.id }}/verify"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="btn secondary small">Verificar</button></form>
+</div>
+
+<div class="card"><h2>Eliminar dominio</h2><p class="small muted">Borra el dominio y todos sus análisis e informes de forma permanente.</p>
+  <form method="post" action="/app/domains/{{ d.id }}/delete"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="btn danger small" data-confirm="¿Eliminar {{ d.hostname }} y todo su historial?">Eliminar</button></form>
+</div>
+{% endblock %}

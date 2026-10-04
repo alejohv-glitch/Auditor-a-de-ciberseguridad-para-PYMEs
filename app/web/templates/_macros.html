@@ -1,0 +1,21 @@
+{% macro sev(f) -%}
+{%- if f.status == 'pass' -%}<span class="sev pass">OK</span>
+{%- elif f.status == 'unknown' -%}<span class="sev unknown">No verificado</span>
+{%- else -%}<span class="sev {{ f.severity }}">{{ f.severity_label }}</span>{%- endif -%}
+{%- endmacro %}
+{% macro counts(c, passed) -%}
+<div class="grid k">
+  <div class="stat"><div class="n critical">{{ c.critical }}</div><div class="l">Crítico</div></div>
+  <div class="stat"><div class="n high">{{ c.high }}</div><div class="l">Alto</div></div>
+  <div class="stat"><div class="n medium">{{ c.medium }}</div><div class="l">Medio</div></div>
+  <div class="stat"><div class="n low">{{ c.low }}</div><div class="l">Bajo</div></div>
+  <div class="stat"><div class="n ok">{{ passed }}</div><div class="l">Correctos</div></div>
+</div>
+{%- endmacro %}
+{% macro scorebox(score, grade, label="Puntuación de seguridad") -%}
+<div class="score">
+  <div><div class="muted small">{{ label }}</div><div class="big">{{ score }}<small> / 100</small></div></div>
+  <div class="grade {{ grade }}">{{ grade }}</div>
+</div>
+<meter min="0" max="100" low="60" high="85" optimum="100" value="{{ score }}">{{ score }}/100</meter>
+{%- endmacro %}
